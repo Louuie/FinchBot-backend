@@ -1,0 +1,8 @@
+name: "DaCommunityBot - backend"
+description: "Go Action for DaCommunityBot - backend"
+
+runs:
+  using: composite
+  steps:
+  - run: go run .
+    shell: bash
