@@ -158,17 +158,17 @@ func SongRequest(c *fiber.Ctx) error {
 	return c.JSON(clientData)
 }
 
-
-
-
-
-
 // Middleware function that returns all the songs in that current table.
 func FetchAllSongs(c *fiber.Ctx) error {
 	type Query struct {
 		Channel string `query:"channel"`
 	}
 	query := new(Query)
+	if err := c.QueryParser(query); err != nil {
+		return c.JSON(&fiber.Map{
+			"error": err,
+		})
+	}
 	if query.Channel == "" {
 		clientData := models.ClientData{
 			Status:  "fail",

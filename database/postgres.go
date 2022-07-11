@@ -16,13 +16,13 @@ type DatabaseResult struct {
 	Channel string
 }
 type ClientSong struct {
-	User     string  `json:"user,omitempty"`
-	Channel  string  `json:"channel,omitempty"`
-	Title    string  `json:"title,omitempty"`
-	Artist   string  `json:"artist,omitempty"`
-	Duration float64 `json:"duration,omitempty"`
-	VideoID  string  `json:"videoid,omitempty"`
-	Position int     `json:"position,omitempty"`
+	User     string  `pg:"user,omitempty"`
+	Channel  string  `pg:"channel,omitempty"`
+	Title    string  `pg:"title,omitempty"`
+	Artist   string  `pg:"artist,omitempty"`
+	Duration float64 `pg:"duration,omitempty"`
+	VideoID  string  `pg:"videoid,omitempty"`
+	Position int     `pg:"position,omitempty"`
 }
 
 // Initializes the connection with the database and if everything went okay then it will return the db. if not it will return an error.
@@ -37,7 +37,8 @@ func InitializeConnection() (*sql.DB, error) {
 	}
 	return db, nil
 }
-// Creates a table with the channel name and if everything goes well it return no error but if something does go wrong it will return an error 
+
+// Creates a table with the channel name and if everything goes well it return no error but if something does go wrong it will return an error
 func CreateTable(channel string, db *sql.DB) error {
 	res, err := db.Exec("CREATE TABLE IF NOT EXISTS " + channel + " (artist VARCHAR NOT NULL, duration INT NOT NULL, id SERIAL, title VARCHAR NOT NULL, userid VARCHAR NOT NULL, videoid VARCHAR NOT NULL, PRIMARY KEY (videoid, title))")
 	if err, ok := err.(*pq.Error); ok {
@@ -55,7 +56,7 @@ func InsertSong(db *sql.DB, song ClientSong, tableName string) error {
 		if err.Code.Name() == "unique_violation" {
 			return errors.New("that song is already in the queue")
 		}
-	} 
+	}
 	log.Println(res)
 	return nil
 }
