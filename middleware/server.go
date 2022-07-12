@@ -14,7 +14,7 @@ import (
 var (
 	store *session.Store
 )
-
+// 1
 func Server() {
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
