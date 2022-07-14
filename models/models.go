@@ -151,3 +151,14 @@ type ModifyChannel struct {
 	Title      string `json:"title"`
 	StreamLang string `json:"broadcaster_language"`
 }
+
+type SearchCategoriesResponse struct {
+	Data []struct {
+		ID        string `json:"id"`
+		Name      string `json:"name"`
+		BoxArtURL string `json:"box_art_url"`
+	} `json:"data"`
+	Pagination struct {
+		Cursor string `json:"cursor"`
+	} `json:"pagination"`
+}

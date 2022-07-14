@@ -170,14 +170,34 @@ func ModifyBroadcastInformation(token string, broadcaster_id string, modifyModel
 	if err != nil {
 		return err
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	var modifyStreamInformation models.ModifyChannel
-	json.Unmarshal(body, &modifyStreamInformation)
 	if resp.StatusCode != 204 {
 		return errors.New("Something went wrong! " + resp.Status)
 	}
 	return nil
+}
+
+func SearchTwitchCategories(query string, token string) (*models.SearchCategoriesResponse, error) {
+	url := "https://api.twitch.tv/helix/search/categories"
+	client := http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	q := req.URL.Query()
+	q.Add("query", query)
+	q.Add("first", "1")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var searchCategoriesResponse models.SearchCategoriesResponse
+	json.Unmarshal(body, &searchCategoriesResponse)
+	return &searchCategoriesResponse, nil
 }

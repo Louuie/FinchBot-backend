@@ -190,9 +190,15 @@ func ModifyBroadcastInformation(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+	gameData, err := api.SearchTwitchCategories(q.Game, fmt.Sprintf("%v", sess.Get("access_token")))
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": err.Error(),
+		})
+	}
 	modelData := models.ModifyChannel{
-		GameID:     q.Game,
-		Title:      q.Title,
+		GameID:     gameData.Data[0].ID,
+		Title:      gameData.Data[0].Name,
 		StreamLang: "",
 	}
 	modifyStreamInformationErr := api.ModifyBroadcastInformation(fmt.Sprintf("%v", sess.Get("access_token")), userInfo.Data[0].ID, modelData)
@@ -202,6 +208,6 @@ func ModifyBroadcastInformation(c *fiber.Ctx) error {
 		})
 	}
 	return c.Status(fiber.StatusAccepted).JSON(&fiber.Map{
-		"success": "successfully set title to " + q.Title + " and set the game to " + q.Game,
+		"success": "successfully set title to " + q.Title + " and set the game to " + modelData.Title,
 	})
 }
