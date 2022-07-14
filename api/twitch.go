@@ -2,8 +2,10 @@ package api
 
 import (
 	"backend/twitch-bot/models"
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -144,4 +146,40 @@ func GetUserInfo(token string) (*models.TwitchUserInfoResponse, error) {
 	var twitchUserInfoResponse models.TwitchUserInfoResponse
 	json.Unmarshal(body, &twitchUserInfoResponse)
 	return &twitchUserInfoResponse, nil
+}
+
+func ModifyBroadcastInformation(token string, broadcaster_id string, modifyModel models.ModifyChannel) error {
+	url := "https://api.twitch.tv/helix/channels"
+	client := http.Client{}
+	config := fmt.Sprintf(`{
+		"game_id": "%s",
+		"title": "%s"
+	}`, modifyModel.GameID, modifyModel.Title)
+	var jsonData = []byte(config)
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
+	log.Println(req.Body)
+	if err != nil {
+		return err
+	}
+	q := req.URL.Query()
+	q.Add("broadcaster_id", broadcaster_id)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	var modifyStreamInformation models.ModifyChannel
+	json.Unmarshal(body, &modifyStreamInformation)
+	if resp.StatusCode != 204 {
+		log.Println(modifyStreamInformation)
+		return errors.New("Something went wrong! " + resp.Status)
+	}
+	return nil
 }

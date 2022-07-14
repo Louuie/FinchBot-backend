@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/session"
 )
@@ -26,7 +25,7 @@ func Server() {
 		CookieHTTPOnly: true,
 		Expiration:     time.Hour * 5,
 	})
-	app.Use(limiter.New())
+	//app.Use(limiter.New())
 	app.Get("/song-request", SongRequest)
 	app.Get("/song-request-delete", DeleteSong)
 	app.Get("/songs", FetchAllSongs)
@@ -34,5 +33,6 @@ func Server() {
 	app.Get("/auth/twitch/validate", TwitchAuthCheck)
 	app.Get("/auth/twitch/user", TwitchUserInfo)
 	app.Post("/auth/twitch/revoke", TwitchAuthRevoke)
+	app.Post("/auth/twitch/modify", ModifyBroadcastInformation)
 	log.Fatal(app.Listen(":3030"))
 }

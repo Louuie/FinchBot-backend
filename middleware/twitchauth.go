@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"backend/twitch-bot/api"
+	"backend/twitch-bot/models"
 	"fmt"
 	"log"
 
@@ -43,6 +44,7 @@ func TwitchAuth(c *fiber.Ctx) error {
 			"error": "not authenticated! (couldn't get session)",
 		})
 	}
+	log.Println(twitchData.AccessToken)
 	sess.Set("authenticated", true)
 	sess.Set("access_token", twitchData.AccessToken)
 	sess.Save()
@@ -143,4 +145,64 @@ func TwitchUserInfo(c *fiber.Ctx) error {
 		})
 	}
 	return c.Status(fiber.StatusAccepted).JSON(userInfo.Data)
+}
+
+func ModifyBroadcastInformation(c *fiber.Ctx) error {
+	// TODO: take in query data for this.
+	type Query struct {
+		Title string `query:"title"`
+		Game  string `query:"game"`
+	}
+	q := new(Query)
+	if err := c.QueryParser(q); err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": "couldn't parse the query",
+		})
+	}
+	if q.Title == "" && q.Game == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": "request must contain at least 1 channel property to modify",
+		})
+	}
+	if q.Title == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": "title must not be an empty string",
+		})
+	}
+	sess, err := store.Get(c)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": "not authenticated! (couldn't get session) err != nil",
+		})
+	}
+	if sess == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": "not authenticated! (couldn't get session) sess == nil",
+		})
+	}
+	if sess.Get("authenticated") == nil || sess.Get("access_token") == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": "not authenticated! (couldn't get session) authenticated == nil || access_token == nil",
+		})
+	}
+	userInfo, err := api.GetUserInfo(fmt.Sprintf("%v", sess.Get("access_token")))
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	modelData := models.ModifyChannel{
+		GameID:     q.Game,
+		Title:      q.Title,
+		StreamLang: "",
+	}
+	modifyStreamInformationErr := api.ModifyBroadcastInformation(fmt.Sprintf("%v", sess.Get("access_token")), userInfo.Data[0].ID, modelData)
+	if modifyStreamInformationErr != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+			"error": modifyStreamInformationErr.Error(),
+		})
+	}
+	return c.Status(fiber.StatusAccepted).JSON(&fiber.Map{
+		"success": "successfully set title to " + q.Title + " and set the game to " + q.Game,
+	})
 }
