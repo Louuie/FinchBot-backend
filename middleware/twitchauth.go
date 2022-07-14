@@ -44,7 +44,6 @@ func TwitchAuth(c *fiber.Ctx) error {
 			"error": "not authenticated! (couldn't get session)",
 		})
 	}
-	log.Println(twitchData.AccessToken)
 	sess.Set("authenticated", true)
 	sess.Set("access_token", twitchData.AccessToken)
 	sess.Save()

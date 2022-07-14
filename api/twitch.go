@@ -157,7 +157,6 @@ func ModifyBroadcastInformation(token string, broadcaster_id string, modifyModel
 	}`, modifyModel.GameID, modifyModel.Title)
 	var jsonData = []byte(config)
 	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
-	log.Println(req.Body)
 	if err != nil {
 		return err
 	}
@@ -178,7 +177,6 @@ func ModifyBroadcastInformation(token string, broadcaster_id string, modifyModel
 	var modifyStreamInformation models.ModifyChannel
 	json.Unmarshal(body, &modifyStreamInformation)
 	if resp.StatusCode != 204 {
-		log.Println(modifyStreamInformation)
 		return errors.New("Something went wrong! " + resp.Status)
 	}
 	return nil
