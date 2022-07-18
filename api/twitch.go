@@ -2,8 +2,11 @@ package api
 
 import (
 	"backend/twitch-bot/models"
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -144,4 +147,160 @@ func GetUserInfo(token string) (*models.TwitchUserInfoResponse, error) {
 	var twitchUserInfoResponse models.TwitchUserInfoResponse
 	json.Unmarshal(body, &twitchUserInfoResponse)
 	return &twitchUserInfoResponse, nil
+}
+
+func ModifyBroadcastInformation(token string, broadcaster_id string, modifyModel *models.ModifyChannel) error {
+	url := "https://api.twitch.tv/helix/channels"
+	client := http.Client{}
+	// IF THE USER DOES NOT PASS A GAME. JUST SET THE TITLE
+	if modifyModel.GameID == "" {
+		config := fmt.Sprintf(`{
+			"title": "%s"
+		}`, modifyModel.Title)
+		var jsonData = []byte(config)
+		req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
+		q := req.URL.Query()
+		q.Add("broadcaster_id", broadcaster_id)
+		req.URL.RawQuery = q.Encode()
+		req.Header.Add("Authorization", "Bearer "+token)
+		req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != 204 {
+			return errors.New("Something went wrong! " + resp.Status)
+		}
+		return nil
+	}
+	// IF THE USER PASSES UNLISTED THEN SET THE GAME TO NULL/UNLISTED.
+	if modifyModel.GameID == "unlisted" && modifyModel.Title == "" {
+		config := `{
+			"game_id": ""
+		}`
+		var jsonData = []byte(config)
+		req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
+		q := req.URL.Query()
+		q.Add("broadcaster_id", broadcaster_id)
+		req.URL.RawQuery = q.Encode()
+		req.Header.Add("Authorization", "Bearer "+token)
+		req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != 204 {
+			return errors.New("Something went wrong! " + resp.Status)
+		}
+		return nil
+	}
+
+	if modifyModel.GameID != "" && modifyModel.Title == "" {
+		config := fmt.Sprintf(`{
+			"game_id": "%s"
+		}`, modifyModel.GameID)
+		var jsonData = []byte(config)
+		req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
+		q := req.URL.Query()
+		q.Add("broadcaster_id", broadcaster_id)
+		req.URL.RawQuery = q.Encode()
+		req.Header.Add("Authorization", "Bearer "+token)
+		req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+		req.Header.Add("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != 204 {
+			return errors.New("Something went wrong! " + resp.Status)
+		}
+		return nil
+	}
+
+	config := fmt.Sprintf(`{
+		"game_id": "%s",
+		"title": "%s"
+	}`, modifyModel.GameID, modifyModel.Title)
+	var jsonData = []byte(config)
+	req, err := http.NewRequest("PATCH", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return err
+	}
+	q := req.URL.Query()
+	q.Add("broadcaster_id", broadcaster_id)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 204 {
+		return errors.New("Something went wrong! " + resp.Status)
+	}
+	return nil
+}
+
+func SearchTwitchCategories(query string, token string) (*models.SearchCategoriesResponse, error) {
+	url := "https://api.twitch.tv/helix/search/categories"
+	client := http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	q := req.URL.Query()
+	q.Add("query", query)
+	q.Add("first", "1")
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var searchCategoriesResponse models.SearchCategoriesResponse
+	json.Unmarshal(body, &searchCategoriesResponse)
+	return &searchCategoriesResponse, nil
+}
+
+func GetCurrentCategory(token string, broadcaster_id string) (*models.CurrentCategoryResponse, error) {
+	url := "https://api.twitch.tv/helix/channels"
+	client := http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	q := req.URL.Query()
+	q.Add("broadcaster_id", broadcaster_id)
+	req.URL.RawQuery = q.Encode()
+	req.Header.Add("Authorization", "Bearer "+token)
+	req.Header.Add("Client-Id", os.Getenv("TWITCH_CLIENT_ID"))
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var currentCategoryResponse models.CurrentCategoryResponse
+	json.Unmarshal(body, &currentCategoryResponse)
+	return &currentCategoryResponse, nil
 }
