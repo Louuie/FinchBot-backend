@@ -162,3 +162,16 @@ type SearchCategoriesResponse struct {
 		Cursor string `json:"cursor"`
 	} `json:"pagination"`
 }
+
+type CurrentCategoryResponse struct {
+	Data []struct {
+		BroadcasterID       string `json:"broadcaster_id"`
+		BroadcasterLogin    string `json:"broadcaster_login"`
+		BroadcasterName     string `json:"broadcaster_name"`
+		BroadcasterLanguage string `json:"broadcaster_language"`
+		GameID              string `json:"game_id"`
+		GameName            string `json:"game_name"`
+		Title               string `json:"title"`
+		Delay               int32  `json:"delay"`
+	}
+}

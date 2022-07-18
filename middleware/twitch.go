@@ -147,7 +147,6 @@ func TwitchUserInfo(c *fiber.Ctx) error {
 }
 
 func ModifyBroadcastInformation(c *fiber.Ctx) error {
-	// TODO: take in query data for this.
 	type Query struct {
 		Title string `query:"title"`
 		Game  string `query:"game"`
@@ -156,16 +155,6 @@ func ModifyBroadcastInformation(c *fiber.Ctx) error {
 	if err := c.QueryParser(q); err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			"error": "couldn't parse the query",
-		})
-	}
-	if q.Title == "" && q.Game == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "request must contain at least 1 channel property to modify",
-		})
-	}
-	if q.Title == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "title must not be an empty string",
 		})
 	}
 	sess, err := store.Get(c)
@@ -190,24 +179,75 @@ func ModifyBroadcastInformation(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+	if q.Game == "" {
+		categoryModel := models.ModifyChannel{
+			GameID:     "",
+			Title:      q.Title,
+			StreamLang: "",
+		}
+		modifyStreamInformationErr := api.ModifyBroadcastInformation(fmt.Sprintf("%v", sess.Get("access_token")), userInfo.Data[0].ID, &categoryModel)
+		if modifyStreamInformationErr != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+				"error": modifyStreamInformationErr.Error(),
+			})
+		}
+		return c.Status(fiber.StatusAccepted).JSON(&fiber.Map{
+			"success": "successfully set the title to " + categoryModel.Title,
+		})
+	}
+	if q.Game == "unlisted" && q.Title == "" {
+		categoryModel := models.ModifyChannel{
+			GameID:     "unlisted",
+			Title:      "",
+			StreamLang: "",
+		}
+		log.Println(sess.Get("access_token"))
+		modifyStreamInformationErr := api.ModifyBroadcastInformation(fmt.Sprintf("%v", sess.Get("access_token")), userInfo.Data[0].ID, &categoryModel)
+		if modifyStreamInformationErr != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+				"error": modifyStreamInformationErr.Error(),
+			})
+		}
+		return c.Status(fiber.StatusAccepted).JSON(&fiber.Map{
+			"success": "successfully set the game to unlisted",
+		})
+	}
 	gameData, err := api.SearchTwitchCategories(q.Game, fmt.Sprintf("%v", sess.Get("access_token")))
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			"error": err.Error(),
 		})
 	}
-	modelData := models.ModifyChannel{
+	if q.Game != "" && q.Title == "" {
+		categoryModel := models.ModifyChannel{
+			GameID:     gameData.Data[0].ID,
+			Title:      "",
+			StreamLang: "",
+		}
+		log.Println(sess.Get("access_token"))
+		modifyStreamInformationErr := api.ModifyBroadcastInformation(fmt.Sprintf("%v", sess.Get("access_token")), userInfo.Data[0].ID, &categoryModel)
+		if modifyStreamInformationErr != nil {
+			return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
+				"error": modifyStreamInformationErr.Error(),
+			})
+		}
+		return c.Status(fiber.StatusAccepted).JSON(&fiber.Map{
+			"success": "successfully set title to " + categoryModel.Title + " and set the game to " + gameData.Data[0].Name,
+		})
+	}
+	categoryModel := models.ModifyChannel{
 		GameID:     gameData.Data[0].ID,
-		Title:      gameData.Data[0].Name,
+		Title:      q.Title,
 		StreamLang: "",
 	}
-	modifyStreamInformationErr := api.ModifyBroadcastInformation(fmt.Sprintf("%v", sess.Get("access_token")), userInfo.Data[0].ID, modelData)
+	log.Println(sess.Get("access_token"))
+	modifyStreamInformationErr := api.ModifyBroadcastInformation(fmt.Sprintf("%v", sess.Get("access_token")), userInfo.Data[0].ID, &categoryModel)
 	if modifyStreamInformationErr != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			"error": modifyStreamInformationErr.Error(),
 		})
 	}
 	return c.Status(fiber.StatusAccepted).JSON(&fiber.Map{
-		"success": "successfully set title to " + q.Title + " and set the game to " + modelData.Title,
+		"success": "successfully set title to " + categoryModel.Title + " and set the game to " + gameData.Data[0].Name,
 	})
 }

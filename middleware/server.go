@@ -26,13 +26,22 @@ func Server() {
 		Expiration:     time.Hour * 5,
 	})
 	//app.Use(limiter.New())
+	// Route used to enter a song/video into the queue
 	app.Get("/song-request", SongRequest)
+	// Route used to delete a song from the queue. (REQUEST: possibly delete this route and implement the delete feature into the song request router?
+	// for example the user passes delete as a query parameter to differenate whether they are enetering a song/video or deleting one)
 	app.Get("/song-request-delete", DeleteSong)
+	// Route that fetches all the active songs/videos currentely in the queue
 	app.Get("/songs", FetchAllSongs)
+	// Route that fetches the users twitch information. (MUST BE AUTHED)
+	app.Get("/twitch/user", TwitchUserInfo)
+	// Route that allows you to modify the users twitch broadcaster information, such as the title and the game. (MUST BE AUTHED)
+	app.Post("/twitch/modify", ModifyBroadcastInformation)
+	// Route that authenticates the user to Twitch and stores that login information into a session on the server.
 	app.Post("/auth/twitch", TwitchAuth)
+	// Route that validates that the user still has a valid twitch access token. (MUST BE AUTHED)
 	app.Get("/auth/twitch/validate", TwitchAuthCheck)
-	app.Get("/auth/twitch/user", TwitchUserInfo)
+	// Route that allows the user the user to revoke the current access_token that is being used on that active session.
 	app.Post("/auth/twitch/revoke", TwitchAuthRevoke)
-	app.Post("/auth/twitch/modify", ModifyBroadcastInformation)
 	log.Fatal(app.Listen(":3030"))
 }
