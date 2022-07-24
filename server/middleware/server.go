@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,7 +13,7 @@ var (
 	store *session.Store
 )
 
-func Server() {
+func Server() *fiber.App {
 	app := fiber.New()
 	app.Use(cors.New(cors.Config{
 		AllowCredentials: true,
@@ -43,5 +42,5 @@ func Server() {
 	app.Get("/auth/twitch/validate", TwitchAuthCheck)
 	// Route that allows the user the user to revoke the current access_token that is being used on that active session.
 	app.Post("/auth/twitch/revoke", TwitchAuthRevoke)
-	log.Fatal(app.Listen(":3030"))
+	return app
 }
