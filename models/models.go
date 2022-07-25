@@ -175,3 +175,10 @@ type CurrentCategoryResponse struct {
 		Delay               int32  `json:"delay"`
 	}
 }
+
+type UnitTesting []struct {
+	Description          string
+	Path                 string
+	Method               string
+	ExpectedCodeResponse int
+}
