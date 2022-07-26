@@ -21,19 +21,19 @@ func TwitchAuth(c *fiber.Ctx) error {
 		log.Fatalln(err)
 	}
 	if query.Code == "" {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			"error": "missing code",
 		})
 	}
 
 	twitchData, err := api.GetAccessToken(query.Code)
 	if err != nil {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			"error": err,
 		})
 	}
 	if twitchData.Status != 0 {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
 			"error": twitchData.Message,
 		})
 	}
@@ -47,7 +47,7 @@ func TwitchAuth(c *fiber.Ctx) error {
 	sess.Set("authenticated", true)
 	sess.Set("access_token", twitchData.AccessToken)
 	sess.Save()
-	return c.JSON(twitchData)
+	return c.Status(fiber.StatusUnauthorized).JSON(twitchData)
 }
 
 // Middleware function that checks if the user still has a valid access token
