@@ -1,7 +1,11 @@
 package main
 
-import "backend/twitch-bot/server/middleware"
+import (
+	"backend/twitch-bot/server/middleware"
+	"log"
+)
 
 func main() {
-	middleware.Server()
+	app := middleware.Server()
+	log.Fatal(app.Listen(":3030"))
 }
