@@ -4,11 +4,12 @@ import (
 	"backend/twitch-bot/models"
 	"backend/twitch-bot/server/middleware"
 	"net/http"
+	"os"
 	"testing"
 )
 
 func TestServerRoutes(t *testing.T) {
-	tests := models.UnitTesting{
+	tests := models.UnitTesting {
 		{
 			Description:          "route used to enter song's into the song request queue",
 			Path:                 "/song-request",
@@ -16,8 +17,8 @@ func TestServerRoutes(t *testing.T) {
 			ExpectedCodeResponse: 200,
 		},
 		{
-			Description:          "non-exestient route",
-			Path:                 "/i-dont-exist",
+			Description:          "non-existent route",
+			Path:                 "/i-don't-exist",
 			Method:               "GET",
 			ExpectedCodeResponse: 404,
 		},
@@ -34,9 +35,21 @@ func TestServerRoutes(t *testing.T) {
 			ExpectedCodeResponse: 200,
 		},
 		{
-			Description:          "route used to fetch the users twitch infromation",
+			Description:          "route used to authenticated the user using twitch",
+			Path:                 "/auth/twitch",
+			Method:               "POST",
+			ExpectedCodeResponse: 401,
+		},
+		{
+			Description:          "route used to fetch the users twitch information",
 			Path:                 "/twitch/user",
 			Method:               "GET",
+			ExpectedCodeResponse: 401,
+		},
+		{
+			Description:          "route used to modify the users twitch broadcast information",
+			Path:                 "/twitch/modify",
+			Method:               "POST",
 			ExpectedCodeResponse: 401,
 		},
 	}
@@ -63,6 +76,19 @@ func TestServerRoutes(t *testing.T) {
 		if test.Path == "/songs" {
 			q := req.URL.Query()
 			q.Add("channel", "testchannel")
+			req.URL.RawQuery = q.Encode()
+		}
+
+		if test.Path == "/auth/twitch" {
+			q := req.URL.Query()
+			q.Add("code", os.Getenv("UNIT_TESTING_AUTH_CODE"))
+			req.URL.RawQuery = q.Encode()
+		}
+
+		if test.Path == "/twitch/modify" {
+			q := req.URL.Query()
+			q.Add("title", "unit testing")
+			q.Add("game", "Software & Game Development")
 			req.URL.RawQuery = q.Encode()
 		}
 
