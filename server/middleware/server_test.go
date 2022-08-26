@@ -8,7 +8,7 @@ import (
 )
 
 func TestServerRoutes(t *testing.T) {
-	tests := models.UnitTesting {
+	tests := models.UnitTesting{
 		{
 			Description:          "route used to enter song's into the song request queue",
 			Path:                 "/song-request",
@@ -48,6 +48,18 @@ func TestServerRoutes(t *testing.T) {
 		{
 			Description:          "route used to modify the users twitch broadcast information",
 			Path:                 "/twitch/modify",
+			Method:               "POST",
+			ExpectedCodeResponse: 401,
+		},
+		{
+			Description:          "route used to validate the users twitch access token",
+			Path:                 "/auth/twitch/validate",
+			Method:               "POST",
+			ExpectedCodeResponse: 401,
+		},
+		{
+			Description:          "route used to revoke the users current session twitch access token",
+			Path:                 "/auth/twitch/revoke",
 			Method:               "POST",
 			ExpectedCodeResponse: 401,
 		},
