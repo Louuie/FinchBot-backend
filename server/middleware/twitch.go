@@ -47,7 +47,7 @@ func TwitchAuth(c *fiber.Ctx) error {
 	sess.Set("authenticated", true)
 	sess.Set("access_token", twitchData.AccessToken)
 	sess.Save()
-	return c.Status(fiber.StatusUnauthorized).JSON(twitchData)
+	return c.Status(fiber.StatusAccepted).JSON(twitchData)
 }
 
 // Middleware function that checks if the user still has a valid access token
