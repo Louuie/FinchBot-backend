@@ -49,7 +49,24 @@ Docker is required for this project to setup a local Postgres database. We use t
 Once you have completed all the steps above, you can finally start the Fiber server. To do so Cd into the LouieBot-backend directory if you haven't already.
 
 ``` zsh
-Cd LouieBot-backend/
+cd LouieBot-backend/
 ```
 
-Then you can simply start the server by running the following command into t
+Then you can simply start the server by running the following command into the terminal.
+
+```zsh
+go run .
+```
+
+The terminal will then output the information of the server, meaning things are running correctly.
+
+```zsh
+ ┌───────────────────────────────────────────────────┐
+ │                   Fiber v2.34.0                   │
+ │               http://127.0.0.1:3030               │
+ │       (bound on host 0.0.0.0 and port 3030)       │
+ │                                                   │
+ │ Handlers ............ 14  Processes ........... 1 │
+ │ Prefork ....... Disabled  PID .............. 8759 │
+ └───────────────────────────────────────────────────┘
+```
