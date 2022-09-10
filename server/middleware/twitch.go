@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"backend/twitch-bot/api"
+	"backend/twitch-bot/handlers"
 	"backend/twitch-bot/models"
 	"fmt"
 	"log"
@@ -53,19 +54,10 @@ func TwitchAuth(c *fiber.Ctx) error {
 // Middleware function that checks if the user still has a valid access token
 func TwitchAuthCheck(c *fiber.Ctx) error {
 	sess, err := store.Get(c)
+	err = handlers.CatchSessionError(sess, &err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) some err",
-		})
-	}
-	if sess == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) sess == nil",
-		})
-	}
-	if sess.Get("authenticated") == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session)",
+			"error": err.Error(),
 		})
 	}
 	token := fmt.Sprintf("%v", sess.Get("access_token"))
@@ -91,19 +83,10 @@ func TwitchAuthCheck(c *fiber.Ctx) error {
 // Middleware function that revokes the twitch access token and destroys the session
 func TwitchAuthRevoke(c *fiber.Ctx) error {
 	sess, err := store.Get(c)
+	err = handlers.CatchSessionError(sess, &err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) err != nil",
-		})
-	}
-	if sess == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) sess == nil",
-		})
-	}
-	if sess.Get("authenticated") == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) authenticated == nil || access_token == nil",
+			"error": err.Error(),
 		})
 	}
 	err = api.RevokeAccessToken(fmt.Sprintf("%v", sess.Get("access_token")))
@@ -122,19 +105,10 @@ func TwitchAuthRevoke(c *fiber.Ctx) error {
 // Middleware function that uses the session data to grab the users twitch information.
 func TwitchUserInfo(c *fiber.Ctx) error {
 	sess, err := store.Get(c)
+	err = handlers.CatchSessionError(sess, &err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) err != nil",
-		})
-	}
-	if sess == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) sess == nil",
-		})
-	}
-	if sess.Get("authenticated") == nil || sess.Get("access_token") == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) authenticated == nil || access_token == nil",
+			"error": err.Error(),
 		})
 	}
 	userInfo, err := api.GetUserInfo(fmt.Sprintf("%v", sess.Get("access_token")))
@@ -158,19 +132,10 @@ func ModifyBroadcastInformation(c *fiber.Ctx) error {
 		})
 	}
 	sess, err := store.Get(c)
+	err = handlers.CatchSessionError(sess, &err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) err != nil",
-		})
-	}
-	if sess == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) sess == nil",
-		})
-	}
-	if sess.Get("authenticated") == nil || sess.Get("access_token") == nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": "not authenticated! (couldn't get session) authenticated == nil || access_token == nil",
+			"error": err.Error(),
 		})
 	}
 	userInfo, err := api.GetUserInfo(fmt.Sprintf("%v", sess.Get("access_token")))
