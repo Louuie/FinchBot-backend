@@ -114,3 +114,20 @@ func DeleteSong(tableName string, Id int, db *sql.DB) error {
 	db.Close()
 	return nil
 }
+
+func GetMultipleEntries(tableName string, user string, db *sql.DB) (bool, error) {
+	res, err := db.Exec("SELECT userid FROM "+tableName+" WHERE userid = $1", user)
+	if err, ok := err.(*pq.Error); ok {
+		log.Fatalln(err)
+		return false, errors.New(err.Code.Name())
+	}
+	numOfRows, err := res.RowsAffected()
+	if numOfRows == 2 {
+		return true, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	defer db.Close()
+	return false, nil
+}

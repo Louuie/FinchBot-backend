@@ -103,6 +103,25 @@ func SongRequest(c *fiber.Ctx) error {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	// Attempts to check if the user has already entered two songs/videos into the queue
+	multipleEntries, err := database.GetMultipleEntries(query.Channel, query.User, db)
+	if multipleEntries {
+		clientData := models.ClientData{
+			Status:  "fail",
+			Message: "You can only request two songs per user",
+			Data:    nil,
+		}
+		return c.JSON(map[string]interface{}{
+			"error": clientData.Message,
+		})
+	}
+	if err != nil {
+		log.Fatalln(err)
+		return c.JSON(map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
 	// Attempts to get the latestSongPosition
 	latestSongPos, err := database.GetLatestSongPosition(db, query.Channel)
 
