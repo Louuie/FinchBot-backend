@@ -117,7 +117,6 @@ func SongRequest(c *fiber.Ctx) error {
 		})
 	}
 	if err != nil {
-		log.Fatalln(err)
 		return c.JSON(map[string]interface{}{
 			"error": err.Error(),
 		})
