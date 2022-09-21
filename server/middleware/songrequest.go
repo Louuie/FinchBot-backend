@@ -21,7 +21,7 @@ func SongRequest(c *fiber.Ctx) error {
 	query := new(Query)
 
 	if err := c.QueryParser(query); err != nil {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": err,
 		})
 	}
@@ -32,7 +32,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "missing query",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -43,7 +43,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "missing user",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -54,7 +54,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "missing channel",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -66,7 +66,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "No results for that name/link",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -78,7 +78,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "Livestreams cannot be added to the song queue",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -88,14 +88,14 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "The video/song is 10 minutes or longer",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
 	// Makes the initial DB connection and attempts to create the table
 	db, dbConnErr := database.InitializeConnection()
 	if dbConnErr != nil {
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": dbConnErr.Error(),
 		})
 	}
@@ -112,12 +112,12 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "You can only request two songs per user",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
 	if err != nil {
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": err.Error(),
 		})
 	}
@@ -130,7 +130,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "The song queue is full!",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -160,7 +160,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: dataError.Error(),
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -173,7 +173,7 @@ func SongRequest(c *fiber.Ctx) error {
 		},
 	}
 	//insertSong(song)
-	return c.JSON(clientData)
+	return c.Status(fiber.StatusBadRequest).JSON(clientData)
 }
 
 // Middleware function that returns all the songs in that current table.
@@ -183,7 +183,7 @@ func FetchAllSongs(c *fiber.Ctx) error {
 	}
 	query := new(Query)
 	if err := c.QueryParser(query); err != nil {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": err,
 		})
 	}
@@ -193,23 +193,23 @@ func FetchAllSongs(c *fiber.Ctx) error {
 			Message: "missing channel",
 			Data:    nil,
 		}
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
 	db, dbConnErr := database.InitializeConnection()
 	if dbConnErr != nil {
-		return c.JSON(map[string]interface{}{
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": dbConnErr.Error(),
 		})
 	}
 	songs, err := database.GetAllSongRequests(query.Channel, db)
 	if err != nil {
-		return c.JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
-	return c.JSON(fiber.Map{
+	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 		"songs": songs,
 	})
 }
@@ -222,33 +222,33 @@ func DeleteSong(c *fiber.Ctx) error {
 	}
 	q := new(Query)
 	if err := c.QueryParser(q); err != nil {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": err,
 		})
 	}
 	if q.Id == 0 {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": "missing song id",
 		})
 	}
 	if q.Channel == "" {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": "missing channel to delete the song from",
 		})
 	}
 	db, dbConnErr := database.InitializeConnection()
 	if dbConnErr != nil {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": dbConnErr.Error(),
 		})
 	}
 	err := database.DeleteSong(q.Channel, q.Id, db)
 	if err != nil {
-		return c.JSON(&fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": err.Error(),
 		})
 	}
-	return c.JSON(&fiber.Map{
+	return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 		"message": "successfully deleted the song with an id of " + strconv.Itoa(q.Id) + " from channel " + q.Channel,
 	})
 }
