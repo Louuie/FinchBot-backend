@@ -13,7 +13,7 @@ func TestServerRoutes(t *testing.T) {
 			Description:          "route used to enter song's into the song request queue",
 			Path:                 "/song-request",
 			Method:               "GET",
-			ExpectedCodeResponse: 200,
+			ExpectedCodeResponse: 400,
 		},
 		{
 			Description:          "non-existent route",
@@ -25,13 +25,13 @@ func TestServerRoutes(t *testing.T) {
 			Description:          "route used to delete song's from the song request queue",
 			Path:                 "/song-request-delete",
 			Method:               "GET",
-			ExpectedCodeResponse: 200,
+			ExpectedCodeResponse: 400,
 		},
 		{
 			Description:          "route used to fetch all the song's from the song request queue",
 			Path:                 "/songs",
 			Method:               "GET",
-			ExpectedCodeResponse: 200,
+			ExpectedCodeResponse: 400,
 		},
 		{
 			Description:          "route used to authenticated the user using twitch",
