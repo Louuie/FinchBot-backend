@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/session"
 )
@@ -19,7 +20,7 @@ func Server() *fiber.App {
 		AllowCredentials: true,
 		AllowOrigins:     "*",
 		AllowHeaders:     "Access-Control-Allow-Origin, Content-Type, Origin, Accept",
-	}), logger.New())
+	}), logger.New(), limiter.New())
 	store = session.New(session.Config{
 		CookieHTTPOnly: true,
 		Expiration:     time.Hour * 5,
