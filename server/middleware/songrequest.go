@@ -43,7 +43,7 @@ func SongRequest(c *fiber.Ctx) error {
 			Message: "missing user",
 			Data:    nil,
 		}
-		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
+		return c.Status(fiber.StatusOK).JSON(map[string]interface{}{
 			"error": clientData.Message,
 		})
 	}
@@ -173,7 +173,7 @@ func SongRequest(c *fiber.Ctx) error {
 		},
 	}
 	//insertSong(song)
-	return c.Status(fiber.StatusBadRequest).JSON(clientData)
+	return c.Status(fiber.StatusOK).JSON(clientData)
 }
 
 // Middleware function that returns all the songs in that current table.
@@ -209,7 +209,7 @@ func FetchAllSongs(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"songs": songs,
 	})
 }
@@ -248,7 +248,7 @@ func DeleteSong(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"message": "successfully deleted the song with an id of " + strconv.Itoa(q.Id) + " from channel " + q.Channel,
 	})
 }
