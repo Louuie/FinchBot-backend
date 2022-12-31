@@ -48,6 +48,15 @@ func CreateTable(channel string, db *sql.DB) error {
 }
 
 func InsertSong(db *sql.DB, song ClientSong, tableName string) error {
+	// Converted Duration
+	// ** bac-13-convert-time-accordingly **
+	/**
+		For some reason, the code below is preventing the song/video from being inserted into the db
+		duration := fmt.Sprintf("%f", song.Duration / 100)
+		log.Println(duration)
+		durationFixed := strings.Replace(duration, ".", "m", 1)
+		log.Println(durationFixed)
+	**/
 	_, err := db.Exec("INSERT INTO "+tableName+" VALUES ($1, $2, $3, $4, $5, $6)", song.Artist, song.Duration, song.Position, song.Title, song.User, song.VideoID)
 	if err, ok := err.(*pq.Error); ok {
 		// 23505: unique_violation

@@ -84,7 +84,7 @@ type Song struct {
 type Data struct {
 	Name     string  `pg:"name,omitempty"`
 	Artist   string  `pg:"artist,omitempty"`
-	Duration float64 `pg:"duration,omitempty"`
+	Duration string `pg:"duration,omitempty"`
 	Position int     `pg:"position,omitempty"`
 }
 type ClientData struct {

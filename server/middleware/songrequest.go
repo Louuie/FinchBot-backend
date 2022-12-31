@@ -6,6 +6,7 @@ import (
 	"backend/twitch-bot/models"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -169,7 +170,7 @@ func SongRequest(c *fiber.Ctx) error {
 		Status:  "success",
 		Message: "inserted into db",
 		Data: []models.Data{
-			{Name: song.Title, Artist: song.Artist, Duration: song.Duration, Position: latestSongPos + 1},
+			{Name: song.Title, Artist: song.Artist, Duration: strings.Replace(strconv.Itoa(int(song.Duration)), ".", "m", 1), Position: latestSongPos + 1},
 		},
 	}
 	//insertSong(song)
