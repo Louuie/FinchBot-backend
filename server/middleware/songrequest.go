@@ -252,3 +252,55 @@ func DeleteSong(c *fiber.Ctx) error {
 		"message": "successfully deleted the song with an id of " + strconv.Itoa(q.Id) + " from channel " + q.Channel,
 	})
 }
+
+// Middleware function that moves the Song/Video up in the queue.
+func PromoteSong(c *fiber.Ctx) error {
+	type Query struct {
+		Channel string `query:"channel"`
+		VideoID 	string `query:"videoid"`
+		Position1 int `query:"position1"`
+		Position2 int `query:"position2"`
+	}
+	q := new(Query)
+	if err := c.QueryParser(q); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": err,
+		})
+	}
+	if q.Position1 == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": "missing song id",
+		})
+	}
+	if q.Position2 == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": "missing song id",
+		})
+	}
+	if q.Channel == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": "missing channel to delete the song from",
+		})
+	}
+	if q.VideoID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": "missing channel to delete the song from",
+		})
+	}
+	db, dbConnErr := database.InitializeConnection()
+	if dbConnErr != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": dbConnErr.Error(),
+		})
+	}
+	err := database.PromoteSong(q.Channel, q.Position1, q.Position2, q.VideoID, db)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": err.Error(),
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"message": "Check console for message!",
+	})
+
+}

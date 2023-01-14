@@ -4,8 +4,10 @@ import (
 	"backend/twitch-bot/models"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"os"
+	"sort"
 
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
@@ -93,6 +95,9 @@ func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, 
 			log.Fatalf(err.Error())
 		}
 		songs = append(songs, song)
+		sort.Slice(songs[:], func(i, j int) bool {
+			return songs[i].Id < songs[j].Id
+		})
 	}
 	defer res.Close()
 	db.Close()
@@ -131,3 +136,52 @@ func GetMultipleEntries(tableName string, user string, db *sql.DB) (bool, error)
 	defer res.Close()
 	return false, nil
 }
+
+// Function that promotes the song in the queue. For more information about what "Promoting the song" does, please refer to issue bac-14 in linear.
+func PromoteSong(tableName string, from int, to int, videoID string,  db *sql.DB) error {
+
+		// Querying through to check if the VideoID that is passed is actually in the index/position value the user passed to prevent errors.
+		videoIDQuery, err := db.Query("SELECT videoid FROM "+tableName+" WHERE id = $1", from)
+		if err, ok := err.(*pq.Error); ok {
+			return err
+		}
+		
+		var vidID string
+
+		for videoIDQuery.Next() {
+			videoIDQuery.Scan(&vidID)
+		}
+
+		if vidID != videoID {
+			return errors.New("the videoID you passed doesn't match the videoID in that position or with that id")
+		} 
+
+		// Song/Video we are replacing for the "promoted"/updated Song/Video
+		res2, err := db.Exec("UPDATE "+tableName+" SET id = $1 WHERE id = $2;", from, to)
+		if err, ok := err.(*pq.Error); ok {
+			log.Fatalln(err)
+			
+			return nil
+		}
+		count2, err := res2.RowsAffected()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println(count2)
+
+
+		// Song/Video we are "promoting"/updating
+		res, err := db.Exec("UPDATE "+tableName+" SET id = $1 WHERE id = $2 AND videoid = $3;", to, from, videoID)
+		if err, ok := err.(*pq.Error); ok {
+			log.Fatalln(err)
+			return err
+		}
+		count, err := res.RowsAffected()
+		if err != nil {
+			log.Fatalln(err)
+			return err
+		}
+		fmt.Println(count)
+	return nil
+}
+
