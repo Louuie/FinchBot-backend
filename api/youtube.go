@@ -3,6 +3,7 @@ package api
 import (
 	"backend/twitch-bot/models"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,7 +15,8 @@ import (
 // TODO: Add better commenting for better overall code reading and understandability
 
 type Duration struct {
-	Duration     float64
+	Time     string
+	Seconds float64
 	IsLiveStream bool
 }
 
@@ -95,20 +97,22 @@ func GetVideoDuration(videoId string) *Duration {
 		json.Unmarshal(body, &songID)
 		if songID.Items[0].ContentDetails.Duration == "P0D" {
 			duration := Duration{
-				Duration:     0,
+				Time:     "LIVE",
+				Seconds: 0,
 				IsLiveStream: true,
 			}
 			videoDurationChan <- &duration
 			close(videoDurationChan)
 			return
 		}
-		songIdDuration := string([]rune(songID.Items[0].ContentDetails.Duration)[2:8])
-		songIdDuration = strings.Replace(songIdDuration, "M", "m", 1)
-		songIdDuration = strings.Replace(songIdDuration, "S", "s", 1)
-		songIdDuration = strings.Replace(songIdDuration, "\x00", "", 1)
-		songDuration := ParseTime(songIdDuration)
+		parsedSongDuration := string([]rune(songID.Items[0].ContentDetails.Duration)[2:8])
+		parsedSongDuration = strings.ToLower(parsedSongDuration)
+		parsedSongDuration = strings.Replace(parsedSongDuration, "\x00", "", 1)
+		fmt.Println("formatted Duration", parsedSongDuration)
+		songDurationInSeconds := ParseTime(parsedSongDuration)
 		duration := Duration{
-			Duration:     songDuration,
+			Time:     parsedSongDuration,
+			Seconds: songDurationInSeconds,
 			IsLiveStream: false,
 		}
 		videoDurationChan <- &duration

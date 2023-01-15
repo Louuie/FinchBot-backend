@@ -6,7 +6,6 @@ import (
 	"backend/twitch-bot/models"
 	"log"
 	"strconv"
-	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -83,7 +82,7 @@ func SongRequest(c *fiber.Ctx) error {
 			"error": clientData.Message,
 		})
 	}
-	if songDuration.Duration >= 600 {
+	if songDuration.Seconds >= 600 {
 		clientData := models.ClientData{
 			Status:  "fail",
 			Message: "The video/song is 10 minutes or longer",
@@ -140,7 +139,7 @@ func SongRequest(c *fiber.Ctx) error {
 		Channel:  query.Channel,
 		Title:    songData.Items[0].Snippet.Title,
 		Artist:   songData.Items[0].Snippet.ChannelTitle,
-		Duration: songDuration.Duration,
+		Duration: songDuration.Time,
 		VideoID:  songData.Items[0].ID.VideoID,
 		Position: latestSongPos + 1,
 	}
@@ -170,7 +169,7 @@ func SongRequest(c *fiber.Ctx) error {
 		Status:  "success",
 		Message: "inserted into db",
 		Data: []models.Data{
-			{Name: song.Title, Artist: song.Artist, Duration: strings.Replace(strconv.Itoa(int(song.Duration)), ".", "m", 1), Position: latestSongPos + 1},
+			{Name: song.Title, Artist: song.Artist, Duration: song.Duration, Position: latestSongPos + 1},
 		},
 	}
 	//insertSong(song)
