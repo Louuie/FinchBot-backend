@@ -84,7 +84,7 @@ type Song struct {
 type Data struct {
 	Name     string  `pg:"name,omitempty"`
 	Artist   string  `pg:"artist,omitempty"`
-	Duration float64 `pg:"duration,omitempty"`
+	Duration string `pg:"duration,omitempty"`
 	Position int     `pg:"position,omitempty"`
 }
 type ClientData struct {
@@ -99,11 +99,11 @@ type SongPosition struct {
 }
 
 type DatabaseQuery struct {
-	Artist   string `pg:"artist,omitempty"`
-	Duration int    `pg:"duration,omitempty"`
 	Id       int    `pg:"id,omitempty"`
 	Title    string `pg:"title,omitempty"`
+	Artist   string `pg:"artist,omitempty"`
 	Userid   string `pg:"userid,omitempty"`
+	Duration string    `pg:"duration,omitempty"`
 	Videoid  string `pg:"videoid,omitempty"`
 }
 

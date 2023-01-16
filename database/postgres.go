@@ -20,7 +20,7 @@ type ClientSong struct {
 	Channel  string  `pg:"channel,omitempty"`
 	Title    string  `pg:"title,omitempty"`
 	Artist   string  `pg:"artist,omitempty"`
-	Duration float64 `pg:"duration,omitempty"`
+	Duration string `pg:"duration,omitempty"`
 	VideoID  string  `pg:"videoid,omitempty"`
 	Position int     `pg:"position,omitempty"`
 }
@@ -40,7 +40,7 @@ func InitializeConnection() (*sql.DB, error) {
 
 // Creates a table with the channel name and if everything goes well it return no error but if something does go wrong it will return an error
 func CreateTable(channel string, db *sql.DB) error {
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + channel + " (artist VARCHAR NOT NULL, duration INT NOT NULL, id SERIAL, title VARCHAR NOT NULL, userid VARCHAR NOT NULL, videoid VARCHAR NOT NULL, PRIMARY KEY (videoid, title))")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + channel + " (id SERIAL, title VARCHAR NOT NULL, artist VARCHAR NOT NULL, userid VARCHAR NOT NULL, duration VARCHAR NOT NULL, videoid VARCHAR NOT NULL, PRIMARY KEY (videoid, title))")
 	if err, ok := err.(*pq.Error); ok {
 		return errors.New(err.Code.Name())
 	}
@@ -48,7 +48,16 @@ func CreateTable(channel string, db *sql.DB) error {
 }
 
 func InsertSong(db *sql.DB, song ClientSong, tableName string) error {
-	_, err := db.Exec("INSERT INTO "+tableName+" VALUES ($1, $2, $3, $4, $5, $6)", song.Artist, song.Duration, song.Position, song.Title, song.User, song.VideoID)
+	// Converted Duration
+	// ** bac-13-convert-time-accordingly **
+	/**
+		For some reason, the code below is preventing the song/video from being inserted into the db
+		duration := fmt.Sprintf("%f", song.Duration / 100)
+		log.Println(duration)
+		durationFixed := strings.Replace(duration, ".", "m", 1)
+		log.Println(durationFixed)
+	**/
+	_, err := db.Exec("INSERT INTO "+tableName+" VALUES ($1, $2, $3, $4, $5, $6)", song.Position, song.Title, song.Artist, song.User, song.Duration, song.VideoID)
 	if err, ok := err.(*pq.Error); ok {
 		// 23505: unique_violation
 		// 42P01: undefined_table
@@ -88,7 +97,7 @@ func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, 
 	songs := make([]models.DatabaseQuery, 0)
 	for res.Next() {
 		song := models.DatabaseQuery{}
-		err := res.Scan(&song.Artist, &song.Duration, &song.Id, &song.Title, &song.Userid, &song.Videoid)
+		err := res.Scan(&song.Id, &song.Title, &song.Artist, &song.Userid, &song.Duration, &song.Videoid)
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
