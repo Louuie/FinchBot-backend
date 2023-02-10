@@ -82,7 +82,7 @@ func SongRequest(c *fiber.Ctx) error {
 			"error": clientData.Message,
 		})
 	}
-	if songDuration.Seconds >= 600 {
+	if songDuration.DurationInSeconds >= 600 {
 		clientData := models.ClientData{
 			Status:  "fail",
 			Message: "The video/song is 10 minutes or longer",
@@ -139,7 +139,7 @@ func SongRequest(c *fiber.Ctx) error {
 		Channel:  query.Channel,
 		Title:    songData.Items[0].Snippet.Title,
 		Artist:   songData.Items[0].Snippet.ChannelTitle,
-		Duration: songDuration.Time,
+		Duration: songDuration.Duration,
 		VideoID:  songData.Items[0].ID.VideoID,
 		Position: latestSongPos + 1,
 	}
