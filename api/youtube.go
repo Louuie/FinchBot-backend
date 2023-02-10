@@ -3,7 +3,6 @@ package api
 import (
 	"backend/twitch-bot/models"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,24 +14,20 @@ import (
 // TODO: Add better commenting for better overall code reading and understandability
 
 type Duration struct {
-	Time     string
-	Seconds float64
+	Duration     string
+	DurationInSeconds float64
 	IsLiveStream bool
 }
 
-func ParseTime(duration string) float64 {
-	parseTimeChan := make(chan float64)
-	go func() {
-		formattedTime := strings.Replace(duration, "\x00", "", 1)
-		songDuration, err := time.ParseDuration(formattedTime)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		parseTimeChan <- songDuration.Seconds()
-		close(parseTimeChan)
-	}()
-	return <-parseTimeChan
+func ParseTime(duration string) (string, float64) {
+	formattedTime := strings.Replace(duration, "\x00", "", 1)
+	songDuration, err := time.ParseDuration(formattedTime)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return songDuration.String(), songDuration.Seconds()
 }
+
 
 func GetSongFromSearch(query string) *models.YouTubeSearch {
 	songSearchChan := make(chan *models.YouTubeSearch)
@@ -97,22 +92,21 @@ func GetVideoDuration(videoId string) *Duration {
 		json.Unmarshal(body, &songID)
 		if songID.Items[0].ContentDetails.Duration == "P0D" {
 			duration := Duration{
-				Time:     "LIVE",
-				Seconds: 0,
+				Duration:     "LIVE",
 				IsLiveStream: true,
 			}
 			videoDurationChan <- &duration
 			close(videoDurationChan)
 			return
 		}
-		parsedSongDuration := string([]rune(songID.Items[0].ContentDetails.Duration)[2:8])
-		parsedSongDuration = strings.ToLower(parsedSongDuration)
-		parsedSongDuration = strings.Replace(parsedSongDuration, "\x00", "", 1)
-		fmt.Println("formatted Duration", parsedSongDuration)
-		songDurationInSeconds := ParseTime(parsedSongDuration)
+		songIdDuration := string([]rune(songID.Items[0].ContentDetails.Duration)[2:8])
+		songIdDuration = strings.Replace(songIdDuration, "M", "m", 1)
+		songIdDuration = strings.Replace(songIdDuration, "S", "s", 1)
+		songIdDuration = strings.Replace(songIdDuration, "\x00", "", 1)
+		songDuration, songDurationInSeconds := ParseTime(songIdDuration)
 		duration := Duration{
-			Time:     parsedSongDuration,
-			Seconds: songDurationInSeconds,
+			Duration:     songDuration,
+			DurationInSeconds: songDurationInSeconds,
 			IsLiveStream: false,
 		}
 		videoDurationChan <- &duration

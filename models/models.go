@@ -82,15 +82,15 @@ type Song struct {
 }
 
 type Data struct {
-	Name     string  `pg:"name,omitempty"`
-	Artist   string  `pg:"artist,omitempty"`
-	Duration string `pg:"duration,omitempty"`
-	Position int     `pg:"position,omitempty"`
+	Name     string  `json:"name,omitempty"`
+	Artist   string  `json:"artist,omitempty"`
+	Duration string `json:"duration,omitempty"`
+	Position int     `json:"position,omitempty"`
 }
 type ClientData struct {
-	Status  string `pg:"status,omitempty"`
-	Message string `pg:"message,omitempty"`
-	Data    []Data `pg:"data,omitempty"`
+	Status  string `json:"status,omitempty"`
+	Message string `json:"message,omitempty"`
+	Data    []Data `json:"data,omitempty"`
 }
 
 type SongPosition struct {
