@@ -147,21 +147,22 @@ func GetMultipleEntries(tableName string, user string, db *sql.DB) (bool, error)
 }
 
 // Function that promotes the song in the queue. For more information about what "Promoting the song" does, please refer to issue bac-14 in linear.
-func PromoteSong(tableName string, from int, to int, videoID string,  db *sql.DB) error {
+func PromoteSong(tableName string, from int, to int, title string,  db *sql.DB) error {
 
 		// Querying through to check if the VideoID that is passed is actually in the index/position value the user passed to prevent errors.
-		videoIDQuery, err := db.Query("SELECT videoid FROM "+tableName+" WHERE id = $1", from)
+		titleQuery, err := db.Query("SELECT title FROM "+tableName+" WHERE id = $1", from)
 		if err, ok := err.(*pq.Error); ok {
 			return err
 		}
 		
-		var vidID string
+		var songTitle string
 
-		for videoIDQuery.Next() {
-			videoIDQuery.Scan(&vidID)
+		for titleQuery.Next() {
+			titleQuery.Scan(&songTitle)
 		}
+		fmt.Println(songTitle, title)
 
-		if vidID != videoID {
+		if songTitle != title {
 			return errors.New("the videoID you passed doesn't match the videoID in that position or with that id")
 		} 
 
@@ -180,7 +181,7 @@ func PromoteSong(tableName string, from int, to int, videoID string,  db *sql.DB
 
 
 		// Song/Video we are "promoting"/updating
-		res, err := db.Exec("UPDATE "+tableName+" SET id = $1 WHERE id = $2 AND videoid = $3;", to, from, videoID)
+		res, err := db.Exec("UPDATE "+tableName+" SET id = $1 WHERE id = $2 AND title = $3;", to, from, title)
 		if err, ok := err.(*pq.Error); ok {
 			log.Fatalln(err)
 			return err

@@ -7,7 +7,7 @@ import (
 )
 
 
-func CatchSessionError(sess *session.Session, err *error) error {
+func CatchSessionError(sess *session.Session, err error) error {
 	if err != nil {
 		return errors.New("not authenticated! (couldn't get session) err != nil")
 	}

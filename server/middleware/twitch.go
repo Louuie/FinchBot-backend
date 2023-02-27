@@ -54,10 +54,10 @@ func TwitchAuth(c *fiber.Ctx) error {
 // Middleware function that checks if the user still has a valid access token
 func TwitchAuthCheck(c *fiber.Ctx) error {
 	sess, err := store.Get(c)
-	err = handlers.CatchSessionError(sess, &err)
+	_ = handlers.CatchSessionError(sess, err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": err.Error(),
+			"error1": err.Error(),
 		})
 	}
 	token := fmt.Sprintf("%v", sess.Get("access_token"))
@@ -83,10 +83,10 @@ func TwitchAuthCheck(c *fiber.Ctx) error {
 // Middleware function that revokes the twitch access token and destroys the session
 func TwitchAuthRevoke(c *fiber.Ctx) error {
 	sess, err := store.Get(c)
-	err = handlers.CatchSessionError(sess, &err)
+	err = handlers.CatchSessionError(sess, err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": err.Error(),
+			"error2": err.Error(),
 		})
 	}
 	err = api.RevokeAccessToken(fmt.Sprintf("%v", sess.Get("access_token")))
@@ -105,10 +105,10 @@ func TwitchAuthRevoke(c *fiber.Ctx) error {
 // Middleware function that uses the session data to grab the users twitch information.
 func TwitchUserInfo(c *fiber.Ctx) error {
 	sess, err := store.Get(c)
-	err = handlers.CatchSessionError(sess, &err)
+	err = handlers.CatchSessionError(sess, err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": err.Error(),
+			"error3": err.Error(),
 		})
 	}
 	userInfo, err := api.GetUserInfo(fmt.Sprintf("%v", sess.Get("access_token")))
@@ -132,10 +132,10 @@ func ModifyBroadcastInformation(c *fiber.Ctx) error {
 		})
 	}
 	sess, err := store.Get(c)
-	err = handlers.CatchSessionError(sess, &err)
+	err = handlers.CatchSessionError(sess, err)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(&fiber.Map{
-			"error": err.Error(),
+			"error4": err.Error(),
 		})
 	}
 	userInfo, err := api.GetUserInfo(fmt.Sprintf("%v", sess.Get("access_token")))

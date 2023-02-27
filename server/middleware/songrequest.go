@@ -257,7 +257,7 @@ func DeleteSong(c *fiber.Ctx) error {
 func PromoteSong(c *fiber.Ctx) error {
 	type Query struct {
 		Channel string `query:"channel"`
-		VideoID 	string `query:"videoid"`
+		Title 	string `query:"title"`
 		Position1 int `query:"position1"`
 		Position2 int `query:"position2"`
 	}
@@ -282,7 +282,7 @@ func PromoteSong(c *fiber.Ctx) error {
 			"error": "missing channel to delete the song from",
 		})
 	}
-	if q.VideoID == "" {
+	if q.Title == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": "missing channel to delete the song from",
 		})
@@ -293,7 +293,7 @@ func PromoteSong(c *fiber.Ctx) error {
 			"error": dbConnErr.Error(),
 		})
 	}
-	err := database.PromoteSong(q.Channel, q.Position1, q.Position2, q.VideoID, db)
+	err := database.PromoteSong(q.Channel, q.Position1, q.Position2, q.Title, db)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": err.Error(),
