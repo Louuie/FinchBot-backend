@@ -4,7 +4,6 @@ import (
 	"backend/twitch-bot/models"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"sort"
@@ -182,7 +181,6 @@ func PromoteSong(tableName string, from int, to int, title string,  db *sql.DB) 
 		for titleQuery.Next() {
 			titleQuery.Scan(&songTitle)
 		}
-		fmt.Println(songTitle, title)
 
 		if songTitle != title {
 			return errors.New("the videoID you passed doesn't match the videoID in that position or with that id")
@@ -195,11 +193,10 @@ func PromoteSong(tableName string, from int, to int, title string,  db *sql.DB) 
 			
 			return nil
 		}
-		count2, err := res2.RowsAffected()
+		_, err = res2.RowsAffected()
 		if err != nil {
 			log.Fatalln(err)
 		}
-		fmt.Println(count2)
 
 
 		// Song/Video we are "promoting"/updating
@@ -208,12 +205,11 @@ func PromoteSong(tableName string, from int, to int, title string,  db *sql.DB) 
 			log.Fatalln(err)
 			return err
 		}
-		count, err := res.RowsAffected()
+		_, err = res.RowsAffected()
 		if err != nil {
 			log.Fatalln(err)
 			return err
 		}
-		fmt.Println(count)
 	return nil
 }
 

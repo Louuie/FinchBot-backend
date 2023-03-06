@@ -4,7 +4,6 @@ import (
 	"backend/twitch-bot/api"
 	"backend/twitch-bot/database"
 	"backend/twitch-bot/models"
-	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -144,7 +143,6 @@ func SongRequest(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
-	fmt.Println(len(*songs))
 
 	if len(*songs) >= 20 {
 		clientData := models.ClientData{
@@ -166,7 +164,6 @@ func SongRequest(c *fiber.Ctx) error {
 		Position: latestSongPos + 1,
 	}
 
-	fmt.Println("song Pos", song.Position)
 
 	// if the table is being created for the first time, the GetLatestSongPosition function can't query through because it thinks that the table was never created so it throws a pq error of undefined_table
 	// so we catch this error and if we do get the "undefined_table" error then create the table "again"(even though it was never created) then insert it
