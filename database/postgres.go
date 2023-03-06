@@ -60,6 +60,9 @@ func InsertSong(db *sql.DB, song ClientSong, tableName string) error {
 		log.Println(durationFixed)
 	**/
 	_, err := db.Exec("INSERT INTO "+tableName+" VALUES ($1, $2, $3, $4, $5, $6)", song.Position, song.Title, song.Artist, song.User, song.Duration, song.VideoID)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
 	if err, ok := err.(*pq.Error); ok {
 		// 23505: unique_violation
 		// 42P01: undefined_table
@@ -88,12 +91,15 @@ func GetLatestSongPosition(db *sql.DB, tableName string) (int, error) {
 	return 0, nil
 }
 
-func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, error) {
-	res, err := db.Query("SELECT * FROM " + tableName)
+func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, *sql.DB, error,) {
+	res, err := db.Query("SELECT * FROM "+tableName+"")
 	if err, ok := err.(*pq.Error); ok {
+		if err != nil {
+			return nil, nil, errors.New(err.Error())
+		}
 		if err.Code == "42P01" {
 			songs := make([]models.DatabaseQuery, 0)
-			return &songs, errors.New(err.Code.Name())
+			return &songs, nil, errors.New(err.Code.Name())
 		}
 	}
 	songs := make([]models.DatabaseQuery, 0)
@@ -107,10 +113,10 @@ func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, 
 		sort.Slice(songs[:], func(i, j int) bool {
 			return songs[i].Id < songs[j].Id
 		})
-	}
+	} 
 	defer res.Close()
-	db.Close()
-	return &songs, nil
+	// db.Close()
+	return &songs, db, nil
 }
 
 func DeleteSong(tableName string, Id int, db *sql.DB) error {
@@ -129,6 +135,21 @@ func DeleteSong(tableName string, Id int, db *sql.DB) error {
 	return nil
 }
 
+func DeleteAllSongs(tableName string, db *sql.DB) error {
+	_, err := db.Exec("DELETE FROM "+tableName+"")
+	if err, ok := err.(*pq.Error); ok {
+		return errors.New(err.Code.Name())
+	}
+	if err, ok := err.(*pq.Error); ok {
+		if err != nil {
+			return err
+		}
+	}
+	return nil		
+}
+
+
+
 func GetMultipleEntries(tableName string, user string, db *sql.DB) (bool, error) {
 	res, err := db.Query("SELECT userid FROM "+tableName+" WHERE userid = $1", user)
 	if err, ok := err.(*pq.Error); ok {
@@ -145,6 +166,7 @@ func GetMultipleEntries(tableName string, user string, db *sql.DB) (bool, error)
 	defer res.Close()
 	return false, nil
 }
+
 
 // Function that promotes the song in the queue. For more information about what "Promoting the song" does, please refer to issue bac-14 in linear.
 func PromoteSong(tableName string, from int, to int, title string,  db *sql.DB) error {

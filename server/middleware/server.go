@@ -54,9 +54,11 @@ func Server() *fiber.App {
 	// Route that allows the user the user to revoke the current access_token that is being used on that active session.
 	app.Post("/auth/twitch/revoke", TwitchAuthRevoke)
 
-	// TEST ROUTE
 	// Route that allows the a Moderator or the Streamer to move the Song/Video up in the queue on the website.
 	app.Post("/promote-song", PromoteSong)
+
+	// Route that allows a Moderator or the Streamer to delete/clear all the songs in the queue.
+	app.Post("/delete-all-songs", DeleteAllSongs)
 
 	return app
 }

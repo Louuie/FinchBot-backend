@@ -4,8 +4,10 @@ import (
 	"backend/twitch-bot/api"
 	"backend/twitch-bot/database"
 	"backend/twitch-bot/models"
+	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -121,10 +123,30 @@ func SongRequest(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+
+	// TODO: Figure out a way instead of "getting the latestSongPos" instead change this to fetch all the songs, then check the length, and if the length is greater than 20 than give this error, instead of checking for latestSongPos.
+
+
+
+
 	// Attempts to get the latestSongPosition
 	latestSongPos, err := database.GetLatestSongPosition(db, query.Channel)
+	if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
 
-	if latestSongPos >= 20 {
+
+	songs, _, err := database.GetAllSongRequests(query.Channel, db)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+	fmt.Println(len(*songs))
+
+	if len(*songs) >= 20 {
 		clientData := models.ClientData{
 			Status:  "fail",
 			Message: "The song queue is full!",
@@ -137,12 +159,14 @@ func SongRequest(c *fiber.Ctx) error {
 	song := database.ClientSong{
 		User:     query.User,
 		Channel:  query.Channel,
-		Title:    songData.Items[0].Snippet.Title,
+		Title:    strings.Replace(songData.Items[0].Snippet.Title, "amp;", "", 1),
 		Artist:   songData.Items[0].Snippet.ChannelTitle,
 		Duration: songDuration.Duration,
 		VideoID:  songData.Items[0].ID.VideoID,
 		Position: latestSongPos + 1,
 	}
+
+	fmt.Println("song Pos", song.Position)
 
 	// if the table is being created for the first time, the GetLatestSongPosition function can't query through because it thinks that the table was never created so it throws a pq error of undefined_table
 	// so we catch this error and if we do get the "undefined_table" error then create the table "again"(even though it was never created) then insert it
@@ -203,12 +227,13 @@ func FetchAllSongs(c *fiber.Ctx) error {
 			"error": dbConnErr.Error(),
 		})
 	}
-	songs, err := database.GetAllSongRequests(query.Channel, db)
+	songs, songReqDB, err := database.GetAllSongRequests(query.Channel, db)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
+	songReqDB.Close()
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"songs": songs,
 	})
@@ -251,6 +276,43 @@ func DeleteSong(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
 		"message": "successfully deleted the song with an id of " + strconv.Itoa(q.Id) + " from channel " + q.Channel,
 	})
+}
+
+
+func DeleteAllSongs(c * fiber.Ctx) error {
+	type Query struct {
+		Channel string `query:"channel"`
+	}
+	q := new(Query)
+	if err := c.QueryParser(q); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": err,
+		})
+	}
+	if q.Channel == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": "missing channel to delete all songs from",
+		})
+	}
+
+	db, dbConnErr := database.InitializeConnection()
+	if dbConnErr != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": dbConnErr.Error(),
+		})
+	}
+
+	dbExecErr := database.DeleteAllSongs(q.Channel, db)
+	if dbExecErr != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+			"error": dbExecErr.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(&fiber.Map{
+		"message": "successfully deleted all songs from channel " + q.Channel,
+	})
+
 }
 
 // Middleware function that moves the Song/Video up in the queue.

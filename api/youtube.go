@@ -3,6 +3,7 @@ package api
 import (
 	"backend/twitch-bot/models"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -25,6 +26,7 @@ func ParseTime(duration string) (string, float64) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	fmt.Println("soneDurationTime", songDuration.Abs())
 	return songDuration.String(), songDuration.Seconds()
 }
 
