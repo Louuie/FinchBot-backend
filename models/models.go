@@ -84,7 +84,8 @@ type Song struct {
 type Data struct {
 	Name     string  `json:"name,omitempty"`
 	Artist   string  `json:"artist,omitempty"`
-	Duration string `json:"duration,omitempty"`
+	FormattedDuration string `json:"formatted_duration,omitempty"`
+	DurationInSeconds float64 `json:"duration_in_seconds,omitempty"`
 	Position int     `json:"position,omitempty"`
 }
 type ClientData struct {
@@ -103,7 +104,8 @@ type DatabaseQuery struct {
 	Title    string `pg:"title,omitempty"`
 	Artist   string `pg:"artist,omitempty"`
 	Userid   string `pg:"userid,omitempty"`
-	Duration string    `pg:"duration,omitempty"`
+	FormattedDuration string    `pg:"formatted_duration,omitempty"`
+	DurationInSeconds float64    `pg:"duration_in_seconds,omitempty"`
 	Videoid  string `pg:"videoid,omitempty"`
 }
 

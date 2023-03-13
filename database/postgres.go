@@ -21,7 +21,8 @@ type ClientSong struct {
 	Channel  string  `pg:"channel,omitempty"`
 	Title    string  `pg:"title,omitempty"`
 	Artist   string  `pg:"artist,omitempty"`
-	Duration string `pg:"duration,omitempty"`
+	FormattedDuration string `pg:"formatted_duration,omitempty"`
+	DurationInSeconds float64  `pg:"duration_in_seconds,omitempty"`
 	VideoID  string  `pg:"videoid,omitempty"`
 	Position int     `pg:"position,omitempty"`
 }
@@ -41,7 +42,7 @@ func InitializeConnection() (*sql.DB, error) {
 
 // Creates a table with the channel name and if everything goes well it return no error but if something does go wrong it will return an error
 func CreateTable(channel string, db *sql.DB) error {
-	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + channel + " (id SERIAL, title VARCHAR NOT NULL, artist VARCHAR NOT NULL, userid VARCHAR NOT NULL, duration VARCHAR NOT NULL, videoid VARCHAR NOT NULL, PRIMARY KEY (videoid, title))")
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + channel + " (id SERIAL, title VARCHAR NOT NULL, artist VARCHAR NOT NULL, userid VARCHAR NOT NULL, formatted_duration VARCHAR NOT NULL, duration_in_seconds INTEGER NOT NULL, videoid VARCHAR NOT NULL, PRIMARY KEY (videoid, title))")
 	if err, ok := err.(*pq.Error); ok {
 		return errors.New(err.Code.Name())
 	}
@@ -58,7 +59,7 @@ func InsertSong(db *sql.DB, song ClientSong, tableName string) error {
 		durationFixed := strings.Replace(duration, ".", "m", 1)
 		log.Println(durationFixed)
 	**/
-	_, err := db.Exec("INSERT INTO "+tableName+" VALUES ($1, $2, $3, $4, $5, $6)", song.Position, song.Title, song.Artist, song.User, song.Duration, song.VideoID)
+	_, err := db.Exec("INSERT INTO "+tableName+" VALUES ($1, $2, $3, $4, $5, $6, $7)", song.Position, song.Title, song.Artist, song.User, song.FormattedDuration, song.DurationInSeconds, song.VideoID)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -102,17 +103,17 @@ func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, 
 		}
 	}
 	songs := make([]models.DatabaseQuery, 0)
-	for res.Next() {
-		song := models.DatabaseQuery{}
-		err := res.Scan(&song.Id, &song.Title, &song.Artist, &song.Userid, &song.Duration, &song.Videoid)
-		if err != nil {
-			log.Fatalf(err.Error())
-		}
-		songs = append(songs, song)
-		sort.Slice(songs[:], func(i, j int) bool {
-			return songs[i].Id < songs[j].Id
-		})
-	} 
+		for res.Next() {
+			song := models.DatabaseQuery{}
+			err := res.Scan(&song.Id, &song.Title, &song.Artist, &song.Userid, &song.FormattedDuration, &song.DurationInSeconds, &song.Videoid)
+			if err != nil {
+				log.Fatalf(err.Error())
+			}
+			songs = append(songs, song)
+			sort.Slice(songs[:], func(i, j int) bool {
+				return songs[i].Id < songs[j].Id
+			})
+	}
 	defer res.Close()
 	// db.Close()
 	return &songs, db, nil

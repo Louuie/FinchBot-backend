@@ -159,7 +159,8 @@ func SongRequest(c *fiber.Ctx) error {
 		Channel:  query.Channel,
 		Title:    strings.Replace(songData.Items[0].Snippet.Title, "amp;", "", 1),
 		Artist:   songData.Items[0].Snippet.ChannelTitle,
-		Duration: songDuration.Duration,
+		FormattedDuration: songDuration.Duration,
+		DurationInSeconds: songDuration.DurationInSeconds,
 		VideoID:  songData.Items[0].ID.VideoID,
 		Position: latestSongPos + 1,
 	}
@@ -190,7 +191,7 @@ func SongRequest(c *fiber.Ctx) error {
 		Status:  "success",
 		Message: "inserted into db",
 		Data: []models.Data{
-			{Name: song.Title, Artist: song.Artist, Duration: song.Duration, Position: latestSongPos + 1},
+			{Name: song.Title, Artist: song.Artist, FormattedDuration: song.FormattedDuration, DurationInSeconds: song.DurationInSeconds,  Position: latestSongPos + 1},
 		},
 	}
 	//insertSong(song)
