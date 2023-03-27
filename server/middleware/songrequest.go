@@ -94,13 +94,13 @@ func SongRequest(c *fiber.Ctx) error {
 		})
 	}
 	// Makes the initial DB connection and attempts to create the table
-	db, dbConnErr := database.InitializeConnection()
+	db, dbConnErr := database.InitializeSongDBConnection()
 	if dbConnErr != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": dbConnErr.Error(),
 		})
 	}
-	err := database.CreateTable(query.Channel, db)
+	err := database.CreateSongTable(query.Channel, db)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -169,7 +169,7 @@ func SongRequest(c *fiber.Ctx) error {
 	// if the table is being created for the first time, the GetLatestSongPosition function can't query through because it thinks that the table was never created so it throws a pq error of undefined_table
 	// so we catch this error and if we do get the "undefined_table" error then create the table "again"(even though it was never created) then insert it
 	if err != nil {
-		err := database.CreateTable(query.Channel, db)
+		err := database.CreateSongTable(query.Channel, db)
 		if err != nil {
 			c.Next()
 		}
@@ -219,7 +219,7 @@ func FetchAllSongs(c *fiber.Ctx) error {
 			"error": clientData.Message,
 		})
 	}
-	db, dbConnErr := database.InitializeConnection()
+	db, dbConnErr := database.InitializeSongDBConnection()
 	if dbConnErr != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(map[string]interface{}{
 			"error": dbConnErr.Error(),
@@ -259,7 +259,7 @@ func DeleteSong(c *fiber.Ctx) error {
 			"error": "missing channel to delete the song from",
 		})
 	}
-	db, dbConnErr := database.InitializeConnection()
+	db, dbConnErr := database.InitializeSongDBConnection()
 	if dbConnErr != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": dbConnErr.Error(),
@@ -293,7 +293,7 @@ func DeleteAllSongs(c * fiber.Ctx) error {
 		})
 	}
 
-	db, dbConnErr := database.InitializeConnection()
+	db, dbConnErr := database.InitializeSongDBConnection()
 	if dbConnErr != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": dbConnErr.Error(),
@@ -347,7 +347,7 @@ func PromoteSong(c *fiber.Ctx) error {
 			"error": "missing channel to delete the song from",
 		})
 	}
-	db, dbConnErr := database.InitializeConnection()
+	db, dbConnErr := database.InitializeSongDBConnection()
 	if dbConnErr != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
 			"error": dbConnErr.Error(),

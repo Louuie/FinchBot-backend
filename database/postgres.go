@@ -27,9 +27,9 @@ type ClientSong struct {
 	Position int     `pg:"position,omitempty"`
 }
 
-// Initializes the connection with the database and if everything went okay then it will return the db. if not it will return an error.
-func InitializeConnection() (*sql.DB, error) {
-	db, err := sql.Open("postgres", os.Getenv("POSTGRES_CONN"))
+// Initializes the connection with the song database and if everything went okay then it will return the db. if not it will return an error.
+func InitializeSongDBConnection() (*sql.DB, error) {
+	db, err := sql.Open("postgres", os.Getenv("SONGS_DB_CONN"))
 	if err, ok := err.(*pq.Error); ok {
 		return nil, errors.New(err.Code.Name())
 	}
@@ -40,9 +40,31 @@ func InitializeConnection() (*sql.DB, error) {
 	return db, nil
 }
 
-// Creates a table with the channel name and if everything goes well it return no error but if something does go wrong it will return an error
-func CreateTable(channel string, db *sql.DB) error {
+// Initializes the connection with the settings database and if everything went okay then it will return the db. if not it will return an error.
+func InitializeSettingsDBConnection() (*sql.DB, error) {
+	db, err := sql.Open("postgres", os.Getenv("SONGS_DB_CONN"))
+	if err, ok := err.(*pq.Error); ok {
+		return nil, errors.New(err.Code.Name())
+	}
+	ping := db.Ping()
+	if ping != nil {
+		return nil, ping
+	}
+	return db, nil
+}
+
+// Creates a song table with the channel name and if everything goes well it return no error but if something does go wrong it will return an error
+func CreateSongTable(channel string, db *sql.DB) error {
 	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + channel + " (id SERIAL, title VARCHAR NOT NULL, artist VARCHAR NOT NULL, userid VARCHAR NOT NULL, formatted_duration VARCHAR NOT NULL, duration_in_seconds INTEGER NOT NULL, videoid VARCHAR NOT NULL, PRIMARY KEY (videoid, title))")
+	if err, ok := err.(*pq.Error); ok {
+		return errors.New(err.Code.Name())
+	}
+	return nil
+}
+
+// Creates a setting table with the channel name and if everything goes well it return no error but if something does go wrong it will return an error
+func CreateSongQueueSettingTable(channel string, db *sql.DB) error {
+	_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + channel + "_settings" + " (channel VARCHAR NOT NULL, status BOOLEAN($1) NOT NULL, song_limit INTEGER($2) NOT NULL, user_limit INTEGER($3) NOT NULL, PRIMARY KEY (channel))", false, 20, 2)
 	if err, ok := err.(*pq.Error); ok {
 		return errors.New(err.Code.Name())
 	}
@@ -60,6 +82,24 @@ func InsertSong(db *sql.DB, song ClientSong, tableName string) error {
 		log.Println(durationFixed)
 	**/
 	_, err := db.Exec("INSERT INTO "+tableName+" VALUES ($1, $2, $3, $4, $5, $6, $7)", song.Position, song.Title, song.Artist, song.User, song.FormattedDuration, song.DurationInSeconds, song.VideoID)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	if err, ok := err.(*pq.Error); ok {
+		// 23505: unique_violation
+		// 42P01: undefined_table
+		if err.Code.Name() == "unique_violation" {
+			return errors.New("that song is already in the queue")
+		}
+	}
+	return nil
+}
+
+
+
+func UpdateSongQueueSettings(db *sql.DB,  string, settings models.SongQueueSettings, tableName string) error {
+
+	_, err := db.Exec("UPDATE "+tableName+" WHERE channel = $1 SET status = $2, song_limit = $3, user_limit = $4", settings.Channel, settings.Status, settings.SongLimit, settings.UserLimit)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
@@ -91,20 +131,20 @@ func GetLatestSongPosition(db *sql.DB, tableName string) (int, error) {
 	return 0, nil
 }
 
-func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, *sql.DB, error,) {
+func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.SongQuery, *sql.DB, error,) {
 	res, err := db.Query("SELECT * FROM "+tableName+"")
 	if err, ok := err.(*pq.Error); ok {
 		if err != nil {
 			return nil, nil, errors.New(err.Error())
 		}
 		if err.Code == "42P01" {
-			songs := make([]models.DatabaseQuery, 0)
+			songs := make([]models.SongQuery, 0)
 			return &songs, nil, errors.New(err.Code.Name())
 		}
 	}
-	songs := make([]models.DatabaseQuery, 0)
+	songs := make([]models.SongQuery, 0)
 		for res.Next() {
-			song := models.DatabaseQuery{}
+			song := models.SongQuery{}
 			err := res.Scan(&song.Id, &song.Title, &song.Artist, &song.Userid, &song.FormattedDuration, &song.DurationInSeconds, &song.Videoid)
 			if err != nil {
 				log.Fatalf(err.Error())
@@ -117,6 +157,32 @@ func GetAllSongRequests(tableName string, db *sql.DB) (*[]models.DatabaseQuery, 
 	defer res.Close()
 	// db.Close()
 	return &songs, db, nil
+}
+
+
+func GetSongQueueSettings(tableName string, db *sql.DB) (*[]models.SongQueueSettingsQuery, *sql.DB, error) {
+	res, err := db.Query("SELECT * FROM "+tableName+"")
+	if err, ok := err.(*pq.Error); ok {
+		if err != nil {
+			return nil, nil, errors.New(err.Error())
+		}
+		if err.Code == "42P01" {
+			settings := make([]models.SongQueueSettingsQuery, 0)
+			return &settings, nil, errors.New(err.Code.Name())
+		}
+	}
+	settings := make([]models.SongQueueSettingsQuery, 0)
+		for res.Next() {
+			setting := models.SongQueueSettingsQuery{}
+			err := res.Scan(&setting.Channel, &setting.Status, &setting.SongLimit, &setting.UserLimit)
+			if err != nil {
+				log.Fatalf(err.Error())
+			}
+			settings = append(settings, setting)
+	}
+	defer res.Close()
+	// db.Close()
+	return &settings, db, nil
 }
 
 func DeleteSong(tableName string, Id int, db *sql.DB) error {
