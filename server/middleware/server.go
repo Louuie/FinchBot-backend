@@ -61,7 +61,10 @@ func Server() *fiber.App {
 	app.Post("/delete-all-songs", DeleteAllSongs)
 
 	// Route that fetches the Song Queue setting.
-	app.Get("/song-queue-settings", )
+	app.Get("/song-queue-settings", GetSongQueueSettings)
+
+	// Route that sets the Song Queue setting.
+	app.Post("/song-queue-settings", SetSongQueueSettings)
 
 	return app
 }
