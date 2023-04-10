@@ -3,6 +3,7 @@ package middleware
 import (
 	"backend/twitch-bot/database"
 	"backend/twitch-bot/models"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -45,6 +46,7 @@ func GetSongQueueSettings(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+	fmt.Println(settings)
 	db.Close()
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"settings": settings,
