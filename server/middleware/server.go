@@ -60,5 +60,11 @@ func Server() *fiber.App {
 	// Route that allows a Moderator or the Streamer to delete/clear all the songs in the queue.
 	app.Post("/delete-all-songs", DeleteAllSongs)
 
+	// Route that fetches the Song Queue setting.
+	app.Get("/song-queue-settings", GetSongQueueSettings)
+
+	// Route that sets the Song Queue setting.
+	app.Post("/song-queue-settings", SetSongQueueSettings)
+
 	return app
 }
